@@ -19,7 +19,11 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.hanium.healthband.model.User;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -39,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
     Timer timer;
     private BluetoothAdapter bluetoothAdapter;
 
-
+    public static ArrayList<User> linkedUserArrayList = new ArrayList<>();
+    public static User user;
 
 
     @Override
@@ -56,6 +61,17 @@ public class MainActivity extends AppCompatActivity {
         final Timer t = new Timer();
         final ConnectTcp connectTcp = new ConnectTcp();
 
+
+        Intent getIntent = getIntent();
+        if(getIntent != null){
+            linkedUserArrayList = getIntent.getParcelableArrayListExtra("LinkedUserList");
+            user = getIntent.getParcelableExtra("userData");
+            if(linkedUserArrayList != null) {
+                for (int i = 0; i < linkedUserArrayList.size(); i++) {
+                    Log.d("main", linkedUserArrayList.get(i).getName());
+                }
+            }
+        }
 
 
         bt_connect.setOnClickListener(new View.OnClickListener() {

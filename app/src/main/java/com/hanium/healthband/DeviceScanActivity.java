@@ -19,6 +19,9 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.hanium.healthband.model.User;
+
 import java.util.ArrayList;
 import java.util.UUID;
 /**
@@ -32,12 +35,20 @@ public class DeviceScanActivity extends ListActivity {
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
+
+    private ArrayList<User> linkedUserArrayList = new ArrayList<>();
+    private User user;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Log.w("DEVICE", "START");
 
+        Intent getIntent = getIntent();
+        if(getIntent != null){
+            linkedUserArrayList = getIntent.getParcelableArrayListExtra("LinkedUserList");
+            user = getIntent.getParcelableExtra("userData");
+        }
         mHandler = new Handler();
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
@@ -121,9 +132,14 @@ public class DeviceScanActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
         if (device == null) return;
+
         final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra("DEVICE_NAME", device.getName().toString());
         intent.putExtra("DEVICE_ADDRESS", device.getAddress().toString());
+        if(linkedUserArrayList != null && user != null){
+            intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
+            intent.putExtra("userData", user);
+        }
         //Log.d("")
         if (mScanning) {
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
@@ -216,6 +232,10 @@ public class DeviceScanActivity extends ListActivity {
                         final Intent intent = new Intent(DeviceScanActivity.this, DeviceControlActivity.class);
                         intent.putExtra("DEVICE_NAME", device.getName().toString());
                         intent.putExtra("DEVICE_ADDRESS", device.getAddress().toString());
+                        if(linkedUserArrayList != null && user != null){
+                            intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
+                            intent.putExtra("userData", user);
+                        }
                         //Log.d("")
                         if (mScanning) {
                             mBluetoothAdapter.stopLeScan(mLeScanCallback);

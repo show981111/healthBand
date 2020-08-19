@@ -38,13 +38,19 @@ public class RegisterActivity extends AppCompatActivity {
         RadioGroup rg_userType = findViewById(R.id.rg_registerType);
 
         Button bt_register = findViewById(R.id.bt_registerSend);
-
+        int radioButtonID = rg_userType.getCheckedRadioButtonId();
+        final String userType;
+        if(radioButtonID == 0 ){
+            userType = "w";
+        }else{
+            userType = "p";
+        }
         bt_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //send user information to server
                 RegisterTask registerTask = new RegisterTask(et_userEmail.getText().toString(), et_userPassword.getText().toString(),
-                            et_userName.getText().toString(), et_userPhone.getText().toString(),"보호자");
+                            et_userName.getText().toString(), et_userPhone.getText().toString(),userType);
                 registerTask.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/rest-auth/registration");
             }
         });

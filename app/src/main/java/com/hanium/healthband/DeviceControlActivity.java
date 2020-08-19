@@ -1,6 +1,7 @@
 package com.hanium.healthband;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
@@ -30,12 +31,14 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
 import com.hanium.healthband.fetchData.fetchGuardiansList;
+import com.hanium.healthband.model.User;
+import com.hanium.healthband.postData.postGuardian;
+import com.hanium.healthband.recyclerView.guardiansListAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.hanium.healthband.LoginActivity.userID;
 
 /**
  * For a given BLE device, this Activity provides the user interface to connect, display data,
@@ -69,6 +72,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
     private RecyclerView guardiansRecyclerView;
     private ImageButton ib_addGuardian;
+
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -173,6 +177,11 @@ public class DeviceControlActivity extends AppCompatActivity {
         mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
         mDataField.setText("empty data");
     }
+
+    public static ArrayList<User> linkedUserArrayList = new ArrayList<>();
+    guardiansListAdapter guardiansListAdapter;
+    private User user;
+    private TextView tv_userName;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -183,6 +192,14 @@ public class DeviceControlActivity extends AppCompatActivity {
         }else{
             mDeviceName = intent.getStringExtra("DEVICE_NAME");
             mDeviceAddress = intent.getStringExtra("DEVICE_ADDRESS");
+            linkedUserArrayList = intent.getParcelableArrayListExtra("LinkedUserList");
+            user = intent.getParcelableExtra("userData");
+            tv_userName.setText(user.getName());
+
+            guardiansRecyclerView = findViewById(R.id.rv_guardian);
+            guardiansListAdapter = new guardiansListAdapter(DeviceControlActivity.this,linkedUserArrayList);
+            guardiansRecyclerView.setLayoutManager(new LinearLayoutManager(DeviceControlActivity.this, LinearLayoutManager.VERTICAL,false));
+            guardiansRecyclerView.setAdapter(guardiansListAdapter);
         }
         Log.d("NAME", mDeviceName + mDeviceAddress);
         // Sets up UI references.
@@ -221,6 +238,8 @@ public class DeviceControlActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String editTextInput = input.getText().toString();
+                                postGuardian postGuardian = new postGuardian(DeviceControlActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter);
+                                postGuardian.execute("API");
                                 Log.d("onclick","editext value is: "+ editTextInput);
                             }
                         })
