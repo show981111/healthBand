@@ -238,7 +238,8 @@ public class DeviceControlActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String editTextInput = input.getText().toString();
-                                postGuardian postGuardian = new postGuardian(DeviceControlActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter);
+                                String token = " ";
+                                postGuardian postGuardian = new postGuardian(DeviceControlActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter,token);
                                 postGuardian.execute("API");
                                 Log.d("onclick","editext value is: "+ editTextInput);
                             }

@@ -69,6 +69,7 @@ public class LoginActivity extends AppCompatActivity {
         private String userPW;
         private ArrayList<User> linkedUserArrayList = new ArrayList<>();
         private String message = "";
+        private String token;
 
         public LoginTask(String userID, String userPW) {
             this.userID = userID;
@@ -111,7 +112,7 @@ public class LoginActivity extends AppCompatActivity {
                     JSONObject responseObject = new JSONObject(jsonData);
                     Log.d("loginTask", jsonData);
                     if(responseObject.getString("status").equals("success")) {
-                        String token = responseObject.getString("key");
+                        token = responseObject.getString("key");
                         JSONObject userDataObject = responseObject.getJSONObject("userdata");
 
                         String username = userDataObject.getString("username");
@@ -176,17 +177,19 @@ public class LoginActivity extends AppCompatActivity {
                         .create()
                         .show();
             }else{
-                if(user.getUser_type().equals("P")) {
+                //if(user.getUser_type().equals("P")) {
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
                     intent.putExtra("userData", user);
+                    intent.putExtra("key", token);
+                    Log.w("login", user.getName());
                     LoginActivity.this.startActivity(intent);
-                }else{
-                    Intent intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
-                    intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
-                    intent.putExtra("userData", user);
-                    LoginActivity.this.startActivity(intent);
-                }
+//                }else{
+//                    Intent intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
+//                    intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
+//                    intent.putExtra("userData", user);
+//                    LoginActivity.this.startActivity(intent);
+//                }
                 Log.d("loginTask", user.getName());
             }
         }

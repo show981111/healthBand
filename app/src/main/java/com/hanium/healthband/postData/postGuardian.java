@@ -33,13 +33,15 @@ public class postGuardian extends AsyncTask<String, Void, User> {
 
     private ArrayList<User> linkedUserArrayList;
     private guardiansListAdapter guardiansListAdapter;
+    private String token;
 
-    public postGuardian(Context c, String wearerID, String protectorID,ArrayList<User> linkedUserArrayList, guardiansListAdapter guardiansListAdapter ) {
+    public postGuardian(Context c, String wearerID, String protectorID,ArrayList<User> linkedUserArrayList, guardiansListAdapter guardiansListAdapter, String token ) {
         this.c = c;
         this.wearerID = wearerID;
         this.protectorID = protectorID;
         this.linkedUserArrayList =linkedUserArrayList;
         this.guardiansListAdapter = guardiansListAdapter;
+        this.token = token;
     }
 
     @Override
@@ -50,13 +52,14 @@ public class postGuardian extends AsyncTask<String, Void, User> {
             return null;
         }
         OkHttpClient okHttpClient = new OkHttpClient();
-
+        Log.d("postGuardian", wearerID + " dsa " +protectorID);
         RequestBody formBody = new FormBody.Builder()
                 .add("wearer", wearerID)
                 .add("protector", protectorID)
                 .build();
 
         Request request = new Request.Builder()
+                .header("Authorization", "Token " + token)
                 .url(url)
                 .post(formBody)
                 .build();
@@ -70,12 +73,14 @@ public class postGuardian extends AsyncTask<String, Void, User> {
             return null;
         }
         String jsonData;
+
         try {
             jsonData = response.body().string();
+            Log.w("post Guard", jsonData);
             JSONObject responseObject = new JSONObject(jsonData);
-
+            Log.d("postGuardian", jsonData + " is emp");
             if(responseObject.getString("status").equals("success")) {
-                JSONObject userDataObject = responseObject.getJSONObject("userdata");
+                JSONObject userDataObject = responseObject.getJSONObject("newlinkedUser");
 
                 String username = userDataObject.getString("username");
                 String name = userDataObject.getString("name");

@@ -21,6 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hanium.healthband.model.User;
+import com.hanium.healthband.postData.postGuardian;
+import com.hanium.healthband.recyclerView.guardiansListAdapter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static ArrayList<User> linkedUserArrayList = new ArrayList<>();
     public static User user;
-
+    public static String token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +68,12 @@ public class MainActivity extends AppCompatActivity {
         if(getIntent != null){
             linkedUserArrayList = getIntent.getParcelableArrayListExtra("LinkedUserList");
             user = getIntent.getParcelableExtra("userData");
+            token = getIntent.getStringExtra("key");
             if(linkedUserArrayList != null) {
                 for (int i = 0; i < linkedUserArrayList.size(); i++) {
                     Log.d("main", linkedUserArrayList.get(i).getName());
                 }
+                Log.w("token", token);
             }
         }
 
@@ -121,7 +125,10 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String editTextInput = input.getText().toString();
-                                Log.d("onclick","editext value is: "+ editTextInput);
+                                Log.d("onclick","editext value is: "+ editTextInput + token);
+                                guardiansListAdapter guardiansListAdapter = new guardiansListAdapter(MainActivity.this,linkedUserArrayList);
+                                postGuardian postGuardian = new postGuardian(MainActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter, token);
+                                postGuardian.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/linkedUser/post/");
                             }
                         })
                         .setNegativeButton("Cancel", null)
