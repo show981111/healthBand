@@ -8,9 +8,14 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -30,7 +35,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener{
 
 
     public static final String EXTRAS_DEVICE_ADDRESS = "address";
@@ -48,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
     public static ArrayList<User> linkedUserArrayList = new ArrayList<>();
     public static User user;
     public static String token;
+
+    private SensorManager sensorManager;
+    private Sensor stepDetectorSensor;
+    private int totalStep;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,6 +175,43 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(enableBtIntent, 1);
         }
 
+        //step count *************************************************************
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        if(stepDetectorSensor == null){
+            Toast.makeText(this,"NO SENSOR", Toast.LENGTH_LONG).show();
+        }
+
+
+    }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_UI);
+//
+//    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        Sensor sensor = event.sensor;
+        float[] values = event.values;
+        int value = -1;
+
+        if (values.length > 0) {
+            value = (int) values[0];
+        }
+
+
+        if (sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
+            totalStep++;
+            tv_hanium.setText(totalStep+"");
+            Log.w("step", totalStep+"");
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 }
