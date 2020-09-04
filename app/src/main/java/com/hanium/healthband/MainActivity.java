@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final Button bt_send = findViewById(R.id.bt_send);
 
         final Timer t = new Timer();
-        final ConnectTcp connectTcp = new ConnectTcp();
 
 
         Intent getIntent = getIntent();
@@ -100,12 +99,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         bt_disConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    connectTcp.closeSocket();
-                } catch (IOException e) {
-                    Log.d("tcp", "fail to close ");
-                    e.printStackTrace();
-                }
+
             }
         });//데이터 전송 중단
 
@@ -116,33 +110,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     //connectTcp.sendDataEverySecond();
 //                Log.d("SCAN_BLE", "start");
 //                Log.d("BLUE", "Start");
-//                Intent startConnect = new Intent(MainActivity.this, DeviceControlActivity.class);
-//                //DeviceScanActivity.class.getLayoutInflater();
-//                MainActivity.this.startActivity(startConnect);
+                Intent startConnect = new Intent(MainActivity.this, DeviceControlActivity.class);
+                //DeviceScanActivity.class.getLayoutInflater();
+                MainActivity.this.startActivity(startConnect);
 
-                final EditText input = new EditText(MainActivity.this);
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT);
-                input.setLayoutParams(lp);
-
-                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Title")
-                        .setMessage("Message")
-                        .setView(input)
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                String editTextInput = input.getText().toString();
-                                Log.d("onclick","editext value is: "+ editTextInput + token);
-                                guardiansListAdapter guardiansListAdapter = new guardiansListAdapter(MainActivity.this,linkedUserArrayList);
-                                postGuardian postGuardian = new postGuardian(MainActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter, token);
-                                postGuardian.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/linkedUser/post/");
-                            }
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .create();
-                dialog.show();
+//                final EditText input = new EditText(MainActivity.this);
+//                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+//                        LinearLayout.LayoutParams.MATCH_PARENT,
+//                        LinearLayout.LayoutParams.MATCH_PARENT);
+//                input.setLayoutParams(lp);
+//
+//                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+//                        .setTitle("Title")
+//                        .setMessage("Message")
+//                        .setView(input)
+//                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialogInterface, int i) {
+//                                String editTextInput = input.getText().toString();
+//                                Log.d("onclick","editext value is: "+ editTextInput + token);
+//                                guardiansListAdapter guardiansListAdapter = new guardiansListAdapter(MainActivity.this,linkedUserArrayList);
+//                                postGuardian postGuardian = new postGuardian(MainActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter, token);
+//                                postGuardian.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/linkedUser/post/");
+//                            }
+//                        })
+//                        .setNegativeButton("Cancel", null)
+//                        .create();
+//                dialog.show();
             }
         });
 

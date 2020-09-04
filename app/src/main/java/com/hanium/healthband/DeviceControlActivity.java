@@ -1,11 +1,17 @@
 package com.hanium.healthband;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 
 import android.app.Activity;
@@ -18,7 +24,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,13 +38,30 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.hanium.healthband.fetchData.fetchGuardiansList;
 import com.hanium.healthband.model.User;
 import com.hanium.healthband.postData.postGuardian;
 import com.hanium.healthband.recyclerView.guardiansListAdapter;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,7 +72,7 @@ import java.util.List;
  * communicates with {@code BluetoothLeService}, which in turn interacts with the
  * Bluetooth LE API.
  */
-public class DeviceControlActivity extends AppCompatActivity {
+public class DeviceControlActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private final static String TAG = DeviceControlActivity.class.getSimpleName();
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
@@ -73,6 +99,45 @@ public class DeviceControlActivity extends AppCompatActivity {
     private RecyclerView guardiansRecyclerView;
     private ImageButton ib_addGuardian;
 
+    MyBackGroundService mService = null;
+    boolean mBound = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        if(mBound){
+            unbindService(mLocServiceConnection);
+            mBound = false;
+        }
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .unregisterOnSharedPreferenceChangeListener(this);
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    private final ServiceConnection mLocServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MyBackGroundService.LocationLocalBinder binder = (MyBackGroundService.LocationLocalBinder) service;
+            mService =binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            mBound = false;
+        }
+    };
+
+
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -83,6 +148,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
             }
+
             // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connect(mDeviceAddress);
         }
@@ -101,6 +167,15 @@ public class DeviceControlActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+            String temperature;
+            String humidity;
+            String heartRate;
+            String steps;
+            String sound;
+
+            int tempSet = 0;
+            int humidSet = 0;
+            int count = 0;
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState("connected");
@@ -120,11 +195,27 @@ public class DeviceControlActivity extends AppCompatActivity {
                 Log.w("loop", "value Extra" + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
                 //set value in here
                 if(intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA) != null ){
+                    humidity = intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA);
                     tv_humidity.setText(intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA));
+                    tempSet = 1;
                 }
                 if(intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA) != null){
+                    temperature = intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA);
                     tv_temperature.setText(intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA));
+                    humidSet = 1;
                 }
+
+                if(tempSet == 1 && humidSet == 1){
+                    count++;
+                    if(count % 2 == 0){
+                        //Send Data to server
+                        count = 0;
+                    }
+                    tempSet = 0;
+                    humidSet = 0;
+                }
+
+
 
             }
         }
@@ -194,13 +285,81 @@ public class DeviceControlActivity extends AppCompatActivity {
             mDeviceAddress = intent.getStringExtra("DEVICE_ADDRESS");
             linkedUserArrayList = intent.getParcelableArrayListExtra("LinkedUserList");
             user = intent.getParcelableExtra("userData");
+            user = new User("test","test","test", "W");
+
+            tv_userName = findViewById(R.id.tv_userName);
             tv_userName.setText(user.getName());
+            linkedUserArrayList = new ArrayList<>();
+            linkedUserArrayList.add(new User("p1","p1,","p1", "P"));
+            linkedUserArrayList.add(new User("p2","p2,","p1", "P"));
+            linkedUserArrayList.add(new User("p3","p3,","p1", "P"));
+
 
             guardiansRecyclerView = findViewById(R.id.rv_guardian);
             guardiansListAdapter = new guardiansListAdapter(DeviceControlActivity.this,linkedUserArrayList);
             guardiansRecyclerView.setLayoutManager(new LinearLayoutManager(DeviceControlActivity.this, LinearLayoutManager.VERTICAL,false));
             guardiansRecyclerView.setAdapter(guardiansListAdapter);
         }
+
+
+        Dexter.withContext(this)
+                .withPermissions(Arrays.asList(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                )).withListener(new MultiplePermissionsListener() {
+            @Override
+            public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
+
+                Toast.makeText(DeviceControlActivity.this, "granted", Toast.LENGTH_SHORT).show();
+
+                //mService.removeLocationUpdate();
+                bindService(new Intent(DeviceControlActivity.this,
+                        MyBackGroundService.class),
+                        mLocServiceConnection,
+                        Context.BIND_AUTO_CREATE);
+
+                mService.requestLocationUpdates();
+            }
+
+            @Override
+            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
+
+            }
+        });
+
+        bindService(new Intent(DeviceControlActivity.this,
+                        MyBackGroundService.class),
+                mLocServiceConnection,
+                Context.BIND_AUTO_CREATE);
+//        mService.requestLocationUpdates();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //2초마다 위치정보 GET
+                mService.requestLocationUpdates();
+            }
+        }, 2000);
+
+
+
+//        mFusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        // Got last known location. In some rare situations this can be null.
+//                        if (location != null) {
+//                            // Logic to handle location object
+//                        }else{
+//                            //Toast.makeText(DeviceControlActivity.this, String.valueOf(location.getAltitude()),Toast.LENGTH_LONG).show();
+//
+//                        }
+//                        Log.w("GETLOCATION", String.valueOf(location.getAltitude()) +
+//                                location.getLongitude() + " " +location.getLatitude() );
+//                    }
+//                });
+
         Log.d("NAME", mDeviceName + mDeviceAddress);
         // Sets up UI references.
         ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
@@ -213,8 +372,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
         getSupportActionBar().setTitle(mDeviceName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getActionBar().setTitle(mDeviceName);
-//        getActionBar().setDisplayHomeAsUpEnabled(true);
+
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
@@ -398,4 +556,24 @@ public class DeviceControlActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         return intentFilter;
     }
+
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(key.equals(Common.KEY_REQUESTING_LOCATION_UPDATES)){
+
+        }
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onListenLocation(SendLocationToActivity event){
+        if(event != null){
+            Toast.makeText(DeviceControlActivity.this,event.getLocation().getLatitude() + " "
+                            + event.getLocation().getLatitude(), Toast.LENGTH_SHORT).show();
+
+        }else{
+            Toast.makeText(DeviceControlActivity.this, "event is null", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
