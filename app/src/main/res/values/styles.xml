@@ -8,4 +8,17 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="barGrapButtons">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textSize">@dimen/small_text</item>
+        <item name="android:gravity">center|center_horizontal</item>
+        <item name="android:clickable">true</item>
+        <item name="android:padding">@dimen/padding_five_dp</item>
+        <item name="android:background">@color/colorWhite</item>
+        <item name="android:layout_marginLeft">0.5dp</item>
+    </style>
+
+    <dimen name="small_text">10sp</dimen>
+    <dimen name="padding_five_dp">5dp</dimen>
+
 </resources>

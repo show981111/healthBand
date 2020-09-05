@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public static ArrayList<User> linkedUserArrayList = new ArrayList<>();
     public static User user;
-    public static String token;
+    private static String token;
 
     private SensorManager sensorManager;
     private Sensor stepDetectorSensor;

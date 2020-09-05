@@ -36,6 +36,7 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -273,6 +274,7 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
     guardiansListAdapter guardiansListAdapter;
     private User user;
     private TextView tv_userName;
+    private String token;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -285,6 +287,7 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             mDeviceAddress = intent.getStringExtra("DEVICE_ADDRESS");
             linkedUserArrayList = intent.getParcelableArrayListExtra("LinkedUserList");
             user = intent.getParcelableExtra("userData");
+            token = intent.getStringExtra("token");
             user = new User("test","test","test", "W");
 
             tv_userName = findViewById(R.id.tv_userName);
@@ -302,32 +305,6 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
         }
 
 
-        Dexter.withContext(this)
-                .withPermissions(Arrays.asList(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                )).withListener(new MultiplePermissionsListener() {
-            @Override
-            public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
-
-                Toast.makeText(DeviceControlActivity.this, "granted", Toast.LENGTH_SHORT).show();
-
-                //mService.removeLocationUpdate();
-                bindService(new Intent(DeviceControlActivity.this,
-                        MyBackGroundService.class),
-                        mLocServiceConnection,
-                        Context.BIND_AUTO_CREATE);
-
-                mService.requestLocationUpdates();
-            }
-
-            @Override
-            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
-
-            }
-        });
-
         bindService(new Intent(DeviceControlActivity.this,
                         MyBackGroundService.class),
                 mLocServiceConnection,
@@ -342,23 +319,42 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             }
         }, 2000);
 
+        RelativeLayout rl_heart = findViewById(R.id.rl_heart);
+        RelativeLayout rl_env = findViewById(R.id.rl_tempHumi);
+        RelativeLayout rl_sound = findViewById(R.id.rl_sound);
+
+        rl_heart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DeviceControlActivity.this, ChartActivity.class);
+                intent.putExtra("token", token);
+                intent.putExtra("sensorType", "heartRate");
+
+                DeviceControlActivity.this.startActivity(intent);
+            }
+        });
+
+        rl_sound.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DeviceControlActivity.this, ChartActivity.class);
+                intent.putExtra("token", token);
+                intent.putExtra("sensorType", "sound");
+
+                DeviceControlActivity.this.startActivity(intent);
+            }
+        });
+
+        rl_env.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DeviceControlActivity.this, EnvChartActivity.class);
+                intent.putExtra("token", token);
+                DeviceControlActivity.this.startActivity(intent);
+            }
+        });
 
 
-//        mFusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        // Got last known location. In some rare situations this can be null.
-//                        if (location != null) {
-//                            // Logic to handle location object
-//                        }else{
-//                            //Toast.makeText(DeviceControlActivity.this, String.valueOf(location.getAltitude()),Toast.LENGTH_LONG).show();
-//
-//                        }
-//                        Log.w("GETLOCATION", String.valueOf(location.getAltitude()) +
-//                                location.getLongitude() + " " +location.getLatitude() );
-//                    }
-//                });
 
         Log.d("NAME", mDeviceName + mDeviceAddress);
         // Sets up UI references.
@@ -411,6 +407,8 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
 //        guardiansRecyclerView = findViewById(R.id.rv_guardian);
 //        fetchGuardiansList fetchGuardiansList = new fetchGuardiansList(DeviceControlActivity.this, userID, guardiansRecyclerView);
 //        fetchGuardiansList.execute("API");
+
+
     }
     @Override
     protected void onResume() {
@@ -451,7 +449,9 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
                 mBluetoothLeService.connect(mDeviceAddress);
                 return true;
             case R.id.menu_disconnect:
+                mBluetoothLeService.close();
                 mBluetoothLeService.disconnect();
+                mService.removeLocationUpdate();
                 return true;
             case android.R.id.home:
                 onBackPressed();
@@ -568,6 +568,8 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void onListenLocation(SendLocationToActivity event){
         if(event != null){
+            Log.w("GETLOCATION IN ACTIVITY",event.getLocation().getLatitude() + " "
+                    + event.getLocation().getLatitude());
             Toast.makeText(DeviceControlActivity.this,event.getLocation().getLatitude() + " "
                             + event.getLocation().getLatitude(), Toast.LENGTH_SHORT).show();
 

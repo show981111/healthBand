@@ -225,9 +225,9 @@ public class MyBackGroundService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
-//        if(!mChangingConfiguration && Common.requestingLocationUpdate(this)){
-//            startForeground(NOTI_ID, getNotification());
-//        }
+        if(!mChangingConfiguration && Common.requestingLocationUpdate(this)){
+            startForeground(NOTI_ID, getNotification());
+        }
         return true;
     }
 

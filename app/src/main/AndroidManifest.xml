@@ -16,7 +16,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-
     <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
@@ -32,6 +31,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <activity android:name=".ChartActivity"></activity>
 
         <uses-library
             android:name="org.apache.http.legacy"
@@ -50,10 +50,11 @@
         </activity>
 
         <service android:name=".BluetoothLeService" />
-        <service android:name=".MyBackGroundService"
+        <service
+            android:name=".MyBackGroundService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="location"/>
+            android:foregroundServiceType="location" />
     </application>
 
 </manifest>

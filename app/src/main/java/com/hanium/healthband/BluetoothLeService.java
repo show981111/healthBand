@@ -63,6 +63,11 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_EXTRA_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.EXTRA_CHAR);
 
+    private int humidity = 0;
+    private int isHumidSet = 0;
+    private int temperature = 0;
+    private int isTempSet = 0;
+
     public List<BluetoothGattCharacteristic> chars = new ArrayList<>();
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -153,6 +158,8 @@ public class BluetoothLeService extends Service {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
     }
+
+
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         Log.w("loop", "updatae Called");
@@ -162,12 +169,14 @@ public class BluetoothLeService extends Service {
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
         if (UUID_TEMPERATURE_MEASUREMENT.equals(characteristic.getUuid())  ) {
             final byte[] data = characteristic.getValue();
-            int temperature = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            temperature = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            isTempSet = 1;
             intent.putExtra(TEMPERATURE_DATA, String.valueOf(temperature));
             //intent.putExtra(TEMPERATURE_DATA, String.valueOf(temperature));
         } else if (UUID_HUMIDITY_MEASUREMENT.equals(characteristic.getUuid())){
             final byte[] data = characteristic.getValue();
-            int humidity = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            humidity = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            isHumidSet = 1;
             intent.putExtra(HUMIDITY_DATA, String.valueOf(humidity));
             //intent.putExtra(HUMIDITY_DATA, String.valueOf(humidity));
         }else if(UUID_EXTRA_MEASUREMENT.equals(characteristic.getUuid())){
@@ -186,6 +195,12 @@ public class BluetoothLeService extends Service {
                 intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
             }
         }
+
+        if(isHumidSet == 1 && isTempSet == 1){
+            //send Data to SErver
+            isHumidSet = -1;
+            isTempSet = -1;
+        }
         sendBroadcast(intent);
     }
     public class LocalBinder extends Binder {
@@ -202,7 +217,8 @@ public class BluetoothLeService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        close();
+        //close();
+        Log.w(TAG, "UI is disconnected!");
         return super.onUnbind(intent);
     }
     private final IBinder mBinder = new LocalBinder();

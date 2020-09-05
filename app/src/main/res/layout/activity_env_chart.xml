@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.hanium.healthband.EnvChartActivity">
+
+    <TextView
+        android:id="@+id/tv_envchartTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:textSize="25sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:textStyle="bold"
+        android:text="홍길동님의 심박수 차트"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:paddingStart="10dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            android:text="현재 : "/>
+
+        <TextView
+            android:id="@+id/tv_env_present"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <TextView
+            android:id="@+id/env_max_indicator"
+            android:layout_width="wrap_content"
+            android:paddingStart="10dp"
+            android:layout_alignParentStart="true"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            android:text="최대 : "/>
+
+        <TextView
+            android:id="@+id/tv_env_max"
+            android:layout_toEndOf="@+id/env_max_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/env_min_indicator"
+            android:layout_width="wrap_content"
+            android:paddingStart="10dp"
+            android:layout_toEndOf="@+id/tv_env_max"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            android:text="최소 : "/>
+
+        <TextView
+            android:id="@+id/tv_env_min"
+            android:layout_toEndOf="@+id/env_min_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/env_mean_indicator"
+            android:layout_width="wrap_content"
+            android:paddingStart="10dp"
+            android:layout_toEndOf="@+id/tv_env_min"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            android:text="평균 : "/>
+
+        <TextView
+            android:id="@+id/tv_env_mean"
+            android:layout_toEndOf="@+id/env_mean_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"/>
+
+    </RelativeLayout>
+
+    <TableLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:stretchColumns="*">
+
+        <TableRow
+            android:id="@+id/tr_env"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@color/colorPrimary"
+            android:padding="2dp">
+
+            <TextView
+                android:id="@+id/tv_temp"
+                style="@style/barGrapButtons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="온 도" />
+
+            <TextView
+                android:id="@+id/tv_humid"
+                style="@style/barGrapButtons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="습 도" />
+        </TableRow>
+    </TableLayout>
+
+
+
+    <com.github.mikephil.charting.charts.CombinedChart
+        android:id="@+id/env_combined_chart"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginEnd="4dp"
+        />
+
+</LinearLayout>

@@ -38,6 +38,7 @@ public class DeviceScanActivity extends ListActivity {
 
     private ArrayList<User> linkedUserArrayList = new ArrayList<>();
     private User user;
+    private String token;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +49,7 @@ public class DeviceScanActivity extends ListActivity {
         if(getIntent != null){
             linkedUserArrayList = getIntent.getParcelableArrayListExtra("LinkedUserList");
             user = getIntent.getParcelableExtra("userData");
+            token = getIntent.getParcelableExtra("key");
         }
         mHandler = new Handler();
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -139,6 +141,7 @@ public class DeviceScanActivity extends ListActivity {
         if(linkedUserArrayList != null && user != null){
             intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
             intent.putExtra("userData", user);
+            intent.putExtra("token", token);
         }
         //Log.d("")
         if (mScanning) {
@@ -235,6 +238,7 @@ public class DeviceScanActivity extends ListActivity {
                         if(linkedUserArrayList != null && user != null){
                             intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
                             intent.putExtra("userData", user);
+                            intent.putExtra("token", token);
                         }
                         //Log.d("")
                         if (mScanning) {
