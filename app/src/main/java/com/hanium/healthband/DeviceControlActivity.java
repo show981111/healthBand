@@ -41,21 +41,10 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.hanium.healthband.fetchData.fetchGuardiansList;
 import com.hanium.healthband.model.User;
 import com.hanium.healthband.postData.postGuardian;
 import com.hanium.healthband.recyclerView.guardiansListAdapter;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.MultiplePermissionsReport;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -304,9 +293,13 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             guardiansRecyclerView.setAdapter(guardiansListAdapter);
         }
 
-
-        bindService(new Intent(DeviceControlActivity.this,
-                        MyBackGroundService.class),
+        Intent bindLocServiceIntent = new Intent(DeviceControlActivity.this, MyBackGroundService.class);
+        bindLocServiceIntent.putExtra("user",user);
+        Log.w("send user", user.getName());
+        bindLocServiceIntent.putParcelableArrayListExtra("linkedUserArrayList", linkedUserArrayList);
+        //new Intent(DeviceControlActivity.this,
+        //                        MyBackGroundService.class)
+        bindService(bindLocServiceIntent,
                 mLocServiceConnection,
                 Context.BIND_AUTO_CREATE);
 //        mService.requestLocationUpdates();

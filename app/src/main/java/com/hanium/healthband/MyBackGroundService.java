@@ -29,8 +29,11 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.hanium.healthband.model.User;
 
 import org.greenrobot.eventbus.EventBus;
+
+import java.util.ArrayList;
 
 public class MyBackGroundService extends Service {
 
@@ -49,6 +52,10 @@ public class MyBackGroundService extends Service {
     private Handler myServiceHandler;
     private Location mLocation;
 
+    private mySocket mySocket;
+
+    private User user;
+    private ArrayList<User> linkedUserArrayList = new ArrayList<>();
 
 
     public MyBackGroundService(){
@@ -81,12 +88,15 @@ public class MyBackGroundService extends Service {
             mNotificationManager.createNotificationChannel(mChannel);
         }
 
+
+
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         boolean startedFromNotification =intent.getBooleanExtra(EXTRA_STARTED_FROM_NOTIFICATION, false);
+
         if(startedFromNotification){
             removeLocationUpdate();
             stopSelf();
@@ -143,6 +153,7 @@ public class MyBackGroundService extends Service {
         EventBus.getDefault().postSticky(new SendLocationToActivity(mLocation));
 
         Log.w("GET UPDATE LOCATION",mLocation.getLatitude() + " " + mLocation.getLongitude() );
+        mySocket.sendDataToServer(mLocation.getLatitude() + " " + mLocation.getLongitude());
 
         //Update notification content if running as a foreground service
 //        if(serviceIsRunningInForeGround(this)){
@@ -213,6 +224,12 @@ public class MyBackGroundService extends Service {
     public IBinder onBind(Intent intent) {
         stopForeground(true);
         mChangingConfiguration = false;
+        user = intent.getParcelableExtra("user");
+        linkedUserArrayList = intent.getParcelableArrayListExtra("linkedUserArrayList");
+        Log.w("GET DATA FROM SERVICE", user.getName() + linkedUserArrayList.get(0).getName());
+        mySocket = new mySocket("http://52.79.230.118:8000",user, linkedUserArrayList );
+        mySocket.connectToServer();
+        mySocket.joinLink();
         return mBinder;
     }
 
@@ -234,6 +251,7 @@ public class MyBackGroundService extends Service {
     @Override
     public void onDestroy() {
         myServiceHandler.removeCallbacks(null);
+        mySocket.disconnect();
         super.onDestroy();
     }
 }
