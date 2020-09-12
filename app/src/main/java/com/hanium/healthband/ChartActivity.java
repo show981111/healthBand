@@ -16,6 +16,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.hanium.healthband.Api.API;
 import com.hanium.healthband.fetchData.fetchStatList;
 import com.hanium.healthband.model.Stat;
+import com.hanium.healthband.model.User;
 
 
 public class ChartActivity extends AppCompatActivity {
@@ -25,6 +26,7 @@ public class ChartActivity extends AppCompatActivity {
     private String token;
     private TextView tv_mean;
     private String sensorType;
+    private User user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,13 +39,17 @@ public class ChartActivity extends AppCompatActivity {
         Intent getIntent = getIntent();
         if(getIntent != null) {
             token = getIntent.getStringExtra("token");
+            user = getIntent.getParcelableExtra("user");
             sensorType = getIntent.getStringExtra("sensorType");
-            if(sensorType.equals("heartRate")){
+            if(sensorType != null && sensorType.equals("heartRate")){
                 label = "심박수";
             }else{
                 label = "주변 소음";
             }
-            String title = getIntent.getStringExtra("userName") + "님의 "+ label+ "차트";
+            String title = " ";
+            if(user != null){
+                title = user.getName() + "님의 "+ label+ "차트";
+            }
             tv_title.setText(title);
         }
 
@@ -73,7 +79,7 @@ public class ChartActivity extends AppCompatActivity {
         xAxis.setGranularity(1f);
 
 
-        fetchStatList fetchStatList = new fetchStatList(sensorType,chart, xAxis, token);
+        fetchStatList fetchStatList = new fetchStatList(sensorType,chart, xAxis, token,user.getUsername() );
 
         if(label.equals("심박수")){
             fetchStatList.execute(API.HEART);

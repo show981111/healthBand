@@ -59,13 +59,13 @@
             android:layout_height="wrap_content"
             android:text="ID/PW로 로그인"/>
 
-        <Button
-            android:id="@+id/bt_loginBluetooth"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/button_background"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="블루투스 로그인"/>
+<!--        <Button-->
+<!--            android:id="@+id/bt_loginBluetooth"-->
+<!--            android:layout_marginTop="10dp"-->
+<!--            android:background="@drawable/button_background"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="블루투스 로그인"/>-->
 
         <Button
             android:id="@+id/bt_loginRegister"

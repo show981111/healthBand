@@ -282,9 +282,9 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             tv_userName = findViewById(R.id.tv_userName);
             tv_userName.setText(user.getName());
             linkedUserArrayList = new ArrayList<>();
-            linkedUserArrayList.add(new User("p1","p1,","p1", "P"));
-            linkedUserArrayList.add(new User("p2","p2,","p1", "P"));
-            linkedUserArrayList.add(new User("p3","p3,","p1", "P"));
+            linkedUserArrayList.add(new User("p1","보호자1","010-3232-2323", "P"));
+            linkedUserArrayList.add(new User("p2","보호자2","010-1232-1232", "P"));
+            linkedUserArrayList.add(new User("p3","보호자3","010-1332-1333", "P"));
 
 
             guardiansRecyclerView = findViewById(R.id.rv_guardian);
@@ -321,6 +321,7 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             public void onClick(View v) {
                 Intent intent = new Intent(DeviceControlActivity.this, ChartActivity.class);
                 intent.putExtra("token", token);
+                intent.putExtra("user", user);
                 intent.putExtra("sensorType", "heartRate");
 
                 DeviceControlActivity.this.startActivity(intent);
@@ -332,8 +333,8 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             public void onClick(View v) {
                 Intent intent = new Intent(DeviceControlActivity.this, ChartActivity.class);
                 intent.putExtra("token", token);
+                intent.putExtra("user", user);
                 intent.putExtra("sensorType", "sound");
-
                 DeviceControlActivity.this.startActivity(intent);
             }
         });
@@ -343,6 +344,7 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             public void onClick(View v) {
                 Intent intent = new Intent(DeviceControlActivity.this, EnvChartActivity.class);
                 intent.putExtra("token", token);
+                intent.putExtra("user", user);
                 DeviceControlActivity.this.startActivity(intent);
             }
         });

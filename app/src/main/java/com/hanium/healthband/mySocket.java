@@ -99,6 +99,18 @@ public class mySocket {
 
     }
 
+    public void sendLocationToServer(String content, double lat, double lang){
+        Gson gson = new Gson();
+        try {
+            Message msg = new Message(user.getUsername(), content, lat, lang);
+            JSONObject obj = new JSONObject(gson.toJson(msg));
+            mSocket.emit("sendLocation", obj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     Emitter.Listener onConnect = new Emitter.Listener() {
         @Override
         public void call(Object... args) {

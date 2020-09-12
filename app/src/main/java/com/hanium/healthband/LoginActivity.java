@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
         final EditText et_loginEmail = findViewById(R.id.et_loginEmail);
         final EditText et_loginPW = findViewById(R.id.et_loginPassword);
         Button bt_loginWithID = findViewById(R.id.bt_login);
-        Button bt_loginWithBluetooth = findViewById(R.id.bt_loginBluetooth);
+        //Button bt_loginWithBluetooth = findViewById(R.id.bt_loginBluetooth);
         Button bt_register = findViewById(R.id.bt_loginRegister);
 
         bt_loginWithID.setOnClickListener(new View.OnClickListener() {

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import okhttp3.FormBody;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -37,14 +38,16 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
     private CombinedChart chart;
     private XAxis xAxis;
     private String token;
+    private String userID;
 
     private ArrayList<Stat> statArrayList = new ArrayList<>();
 
-    public fetchStatList(String sensorType, CombinedChart chart, XAxis xAxis, String token) {
+    public fetchStatList(String sensorType, CombinedChart chart, XAxis xAxis, String token, String userID) {
         this.sensorType = sensorType;
         this.chart = chart;
         this.xAxis = xAxis;
         this.token = token;
+        this.userID = userID;
     }
 
     @Override
@@ -55,11 +58,15 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
         if(TextUtils.isEmpty(token)&& TextUtils.isEmpty(sensorType) ){
             return null;
         }
+        HttpUrl.Builder httpBuilder = HttpUrl.parse(url).newBuilder();
+        httpBuilder.addQueryParameter("wearerID", userID);
+        httpBuilder.addQueryParameter("sensorName", sensorType);
+
         OkHttpClient okHttpClient = new OkHttpClient();
 
         Request request = new Request.Builder()
                 .header("Authorization", "Token " + token)
-                .url(url)
+                .url(httpBuilder.build())
                 .build();
 
         Response response;

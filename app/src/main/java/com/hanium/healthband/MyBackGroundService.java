@@ -151,9 +151,9 @@ public class MyBackGroundService extends Service {
     private void onNewLocation(Location lastLocation) {
         mLocation = lastLocation;
         EventBus.getDefault().postSticky(new SendLocationToActivity(mLocation));
-
         Log.w("GET UPDATE LOCATION",mLocation.getLatitude() + " " + mLocation.getLongitude() );
-        mySocket.sendDataToServer(mLocation.getLatitude() + " " + mLocation.getLongitude());
+        mySocket.sendLocationToServer(mLocation.getLatitude() + " " + mLocation.getLongitude(),
+                                    mLocation.getLatitude(), mLocation.getLongitude());
 
         //Update notification content if running as a foreground service
 //        if(serviceIsRunningInForeGround(this)){
@@ -226,7 +226,10 @@ public class MyBackGroundService extends Service {
         mChangingConfiguration = false;
         user = intent.getParcelableExtra("user");
         linkedUserArrayList = intent.getParcelableArrayListExtra("linkedUserArrayList");
-        Log.w("GET DATA FROM SERVICE", user.getName() + linkedUserArrayList.get(0).getName());
+//        Log.w("GET DATA FROM SERVICE", user.getName() + linkedUserArrayList.get(0).getName());
+        user = new User("w1@gmail.com", "w1@gmail.com", "w1@gmail.com", "W");
+        linkedUserArrayList = new ArrayList<>();
+        linkedUserArrayList.add(new User("p1@gmail.com","p1@gmail.com","p1@gmail.com", "P" ));
         mySocket = new mySocket("http://52.79.230.118:8000",user, linkedUserArrayList );
         mySocket.connectToServer();
         mySocket.joinLink();

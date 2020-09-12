@@ -18,6 +18,7 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.hanium.healthband.fetchData.fetchStatList;
 import com.hanium.healthband.model.Stat;
+import com.hanium.healthband.model.User;
 
 
 public class EnvChartActivity extends AppCompatActivity {
@@ -34,7 +35,7 @@ public class EnvChartActivity extends AppCompatActivity {
     private CombinedData data;
 
     private String token;
-
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +53,11 @@ public class EnvChartActivity extends AppCompatActivity {
         Intent getIntent = getIntent();
         if(getIntent != null) {
             token = getIntent.getStringExtra("token");
-            String title = getIntent.getStringExtra("userName") + "님의 온/습도 차트";
+            user = getIntent.getParcelableExtra("user") ;
+            String title = " ";
+            if(user!=null){
+                title = user.getName() + "님의 온/습도 차트";
+            }
             tv_title.setText(title);
         }
 
@@ -87,7 +92,7 @@ public class EnvChartActivity extends AppCompatActivity {
 
 
 
-        fetchStatList fetchStatList = new fetchStatList("temp",chart, xAxis, token);
+        fetchStatList fetchStatList = new fetchStatList("temp",chart, xAxis, token, user.getUsername());
         fetchStatList.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/sensorData/tempHumid/");
 
         tv_temp.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
@@ -113,7 +118,7 @@ public class EnvChartActivity extends AppCompatActivity {
             public void onClick(View v) {
                 v.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                 tv_humid.setBackgroundColor(Color.WHITE);
-                fetchStatList fetchStatList = new fetchStatList("temp",chart, xAxis, token);
+                fetchStatList fetchStatList = new fetchStatList("temp",chart, xAxis, token,  user.getUsername());
                 fetchStatList.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/sensorData/tempHumid/");
             }
         });
@@ -131,7 +136,7 @@ public class EnvChartActivity extends AppCompatActivity {
 //
 //                data.clearValues();
 
-                fetchStatList fetchStatList = new fetchStatList("humid",chart, xAxis, token);
+                fetchStatList fetchStatList = new fetchStatList("humid",chart, xAxis, token, user.getUsername());
                 fetchStatList.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/sensorData/tempHumid/");
 
 //                data.setData(generateCandleData(CandleEntries));
