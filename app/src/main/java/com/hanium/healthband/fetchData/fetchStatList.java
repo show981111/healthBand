@@ -41,6 +41,9 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
     private String userID;
 
     private ArrayList<Stat> statArrayList = new ArrayList<>();
+    private String specificType;
+
+
 
     public fetchStatList(String sensorType, CombinedChart chart, XAxis xAxis, String token, String userID) {
         this.sensorType = sensorType;
@@ -48,6 +51,15 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
         this.xAxis = xAxis;
         this.token = token;
         this.userID = userID;
+    }
+
+    public fetchStatList(String sensorType, CombinedChart chart, XAxis xAxis, String token, String userID, String specificType) {
+        this.sensorType = sensorType;
+        this.chart = chart;
+        this.xAxis = xAxis;
+        this.token = token;
+        this.userID = userID;
+        this.specificType = specificType;
     }
 
     @Override
@@ -58,16 +70,18 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
         if(TextUtils.isEmpty(token)&& TextUtils.isEmpty(sensorType) ){
             return null;
         }
+        OkHttpClient okHttpClient = new OkHttpClient();
+
         HttpUrl.Builder httpBuilder = HttpUrl.parse(url).newBuilder();
         httpBuilder.addQueryParameter("wearerID", userID);
         httpBuilder.addQueryParameter("sensorName", sensorType);
 
-        OkHttpClient okHttpClient = new OkHttpClient();
-
+        Log.d("wearer", userID);
         Request request = new Request.Builder()
                 .header("Authorization", "Token " + token)
                 .url(httpBuilder.build())
                 .build();
+        Log.d("wearer", httpBuilder.build().toString());
 
         Response response;
         try {
@@ -83,6 +97,9 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
         try {
 
             if(response.code() == 200) {
+                if(specificType != null){
+                    sensorType = specificType;
+                }
                 jsonData = response.body().string();
                 Log.d("fetchStatList", jsonData);
                 JSONObject responseObject = new JSONObject(jsonData);
@@ -137,8 +154,7 @@ public class fetchStatList extends AsyncTask<String, Void, ArrayList<Stat>> {
                 lineEntry.add(entry);
                 candleEntries.add(candleEntry);
             }
-//        data.setData(generateLineData());
-//        data.setData(generateCandleData());
+
             GenerateData generateData = new GenerateData();
             data.setData(generateData.generateLineData(lineEntry));
             String label = "데이터";

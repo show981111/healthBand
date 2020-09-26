@@ -2,11 +2,14 @@ package com.hanium.healthband;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,9 +19,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.hanium.healthband.Api.API;
 import com.hanium.healthband.model.User;
+import com.hanium.healthband.postData.postToken;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -44,7 +52,8 @@ import okhttp3.Response;
 public class LoginActivity extends AppCompatActivity {
 
     private BluetoothAdapter bluetoothAdapter;
-
+    public static String token;
+    private String firebaseToken;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +83,30 @@ public class LoginActivity extends AppCompatActivity {
                 LoginActivity.this.startActivity(goToRegister);
             }
         });
+
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener( LoginActivity.this,  new OnSuccessListener<InstanceIdResult>() {
+            @Override
+            public void onSuccess(InstanceIdResult instanceIdResult) {
+                firebaseToken = instanceIdResult.getToken();
+                Log.d("asdf", firebaseToken);
+            }
+        });
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            Log.i("info", "No fine location permissions");
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    1);
+        }
+
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, 1);
+        }
+
 
         Dexter.withContext(this)
                 .withPermissions(Arrays.asList(
@@ -112,7 +145,6 @@ public class LoginActivity extends AppCompatActivity {
         private String userPW;
         private ArrayList<User> linkedUserArrayList = new ArrayList<>();
         private String message = "";
-        private String token;
 
         public LoginTask(String userID, String userPW) {
             this.userID = userID;
@@ -177,7 +209,7 @@ public class LoginActivity extends AppCompatActivity {
                             }else{
                                 linked_user_type = "P";
                             }
-                            User linkedUser = new User(linked_username,linked_username,linked_user_type,linked_phone_number);
+                            User linkedUser = new User(linked_username,linked_username,linked_phone_number, linked_user_type);
                             linkedUserArrayList.add(linkedUser);
                         }
 
@@ -212,7 +244,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(User user) {
             super.onPostExecute(user);
-            Log.d("Login", user.getName() + user.getUser_type() + user.getPhone_number());
+
             if(user == null) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
                 builder.setMessage(message)
@@ -220,19 +252,28 @@ public class LoginActivity extends AppCompatActivity {
                         .create()
                         .show();
             }else{
-                //if(user.getUser_type().equals("P")) {
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                Log.d("Login", user.getName() + user.getUser_type() + user.getPhone_number());
+                Log.w("token", token);
+                postToken postToken = new postToken(token, firebaseToken, user.getUsername());
+                postToken.execute(API.postFCM);
+                if(user.getUser_type().equals("W")) {
+                    Intent intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
                     intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
                     intent.putExtra("userData", user);
                     intent.putExtra("key", token);
-                    Log.w("login", user.getName());
+                    Log.w("login send Act", token);
                     LoginActivity.this.startActivity(intent);
-//                }else{
+                }else{
+                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                    builder.setMessage("보호자 어플을 사용해주세요!")
+                            .setNegativeButton("확인", null)
+                            .create()
+                            .show();
 //                    Intent intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
 //                    intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
 //                    intent.putExtra("userData", user);
 //                    LoginActivity.this.startActivity(intent);
-//                }
+                }
                 Log.d("loginTask", user.getName());
             }
         }

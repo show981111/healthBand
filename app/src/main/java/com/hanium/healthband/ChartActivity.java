@@ -80,6 +80,7 @@ public class ChartActivity extends AppCompatActivity {
 
 
         fetchStatList fetchStatList = new fetchStatList(sensorType,chart, xAxis, token,user.getUsername() );
+        fetchStatList.execute(API.GetSensor);
 
         if(label.equals("심박수")){
             fetchStatList.execute(API.HEART);

@@ -34,11 +34,10 @@ public class DeviceScanActivity extends ListActivity {
     private Handler mHandler;
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+    private static final long SCAN_PERIOD = 2000;
 
     private ArrayList<User> linkedUserArrayList = new ArrayList<>();
     private User user;
-    private String token;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +48,7 @@ public class DeviceScanActivity extends ListActivity {
         if(getIntent != null){
             linkedUserArrayList = getIntent.getParcelableArrayListExtra("LinkedUserList");
             user = getIntent.getParcelableExtra("userData");
-            token = getIntent.getParcelableExtra("key");
+//            String token = getIntent.getParcelableExtra("key");
         }
         mHandler = new Handler();
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -141,7 +140,7 @@ public class DeviceScanActivity extends ListActivity {
         if(linkedUserArrayList != null && user != null){
             intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
             intent.putExtra("userData", user);
-            intent.putExtra("token", token);
+            //intent.putExtra("token", token);
         }
         //Log.d("")
         if (mScanning) {
@@ -230,7 +229,6 @@ public class DeviceScanActivity extends ListActivity {
             new BluetoothAdapter.LeScanCallback() {
                 @Override
                 public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    Log.w("SCAN", "Scanning start " + device.getAddress());
                     if(device.getAddress().equals("F3:58:C4:91:C8:BC")){
                         final Intent intent = new Intent(DeviceScanActivity.this, DeviceControlActivity.class);
                         intent.putExtra("DEVICE_NAME", device.getName().toString());
@@ -238,7 +236,7 @@ public class DeviceScanActivity extends ListActivity {
                         if(linkedUserArrayList != null && user != null){
                             intent.putParcelableArrayListExtra("LinkedUserList", linkedUserArrayList);
                             intent.putExtra("userData", user);
-                            intent.putExtra("token", token);
+                            //intent.putExtra("token", token);
                         }
                         //Log.d("")
                         if (mScanning) {

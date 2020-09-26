@@ -15,13 +15,18 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.hanium.healthband.Api.API;
+import com.hanium.healthband.model.SensorData;
+import com.hanium.healthband.postData.postEvent;
+import com.hanium.healthband.postData.postSensorData;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
+import static com.hanium.healthband.LoginActivity.token;
+
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
@@ -55,6 +60,10 @@ public class BluetoothLeService extends Service {
             "com.hanium.bluetooth.le.TEMPERATURE_DATA";//com.example.bluetooth.le.EXTRA_DATA
     public final static String HUMIDITY_DATA =
             "com.hanium.bluetooth.le.HUMIDITY_DATA";//com.example.bluetooth.le.EXTRA_DATA
+    public final static String HEART_RATE_DATA =
+            "com.hanium.bluetooth.le.HEART_RATE_DATA";
+    public final static String SOUND_DATA =
+            "com.hanium.bluetooth.le.SOUND_DATA";
 
     public final static UUID UUID_TEMPERATURE_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.TEMPERATURE_MEASUREMENT);
@@ -63,12 +72,39 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_EXTRA_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.EXTRA_CHAR);
 
-    private int humidity = 0;
-    private int isHumidSet = 0;
-    private int temperature = 0;
-    private int isTempSet = 0;
+    public final static UUID UUID_HEART_RATE_MEASUREMENT =
+            UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
+    public final static UUID UUID_SOUND_MEASUREMENT =
+            UUID.fromString(SampleGattAttributes.SOUND_MEASUREMENT);
+    public final static UUID UUID_FALLING_CHAR =
+            UUID.fromString(SampleGattAttributes.FALLING_CHAR);
+    public final static UUID UUID_SWITCH_CHAR =
+            UUID.fromString(SampleGattAttributes.SWITCH_CHAR);
 
-    public List<BluetoothGattCharacteristic> chars = new ArrayList<>();
+    private String string_humid = "";
+    private String string_temp = "";
+    private String string_heartRate = "";
+    private String string_falling = "";
+    private String string_sound = "";
+    private String string_switchOn = "";
+
+
+    private int isHumidSet = 0;
+    private int isTempSet = 0;
+    private int isHeartSet = 0;
+    private int isSoundSet = 0;
+    private int isFallingSet = 0;
+    private int isSwitchOnSet = 0;
+
+    private int temperature = 0;
+    private int humidity = 0;
+    private int heartRate = 0;
+    private int sound = 0;
+    private int falling = 0;
+    private int switchOn = 0;
+
+
+//    public List<BluetoothGattCharacteristic> chars = new ArrayList<>();
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -97,9 +133,8 @@ public class BluetoothLeService extends Service {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.w(TAG, "onServicesDiscovered received: " + status);
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
-
-
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -134,9 +169,7 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            Log.w("loop", "changed Called");
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-
         }
 
         @Override
@@ -162,32 +195,68 @@ public class BluetoothLeService extends Service {
 
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
-        Log.w("loop", "updatae Called");
         final Intent intent = new Intent(action);
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
+
+
         if (UUID_TEMPERATURE_MEASUREMENT.equals(characteristic.getUuid())  ) {
             final byte[] data = characteristic.getValue();
             temperature = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
             isTempSet = 1;
-            intent.putExtra(TEMPERATURE_DATA, String.valueOf(temperature));
             //intent.putExtra(TEMPERATURE_DATA, String.valueOf(temperature));
+            string_temp = String.valueOf(temperature);
+            if(string_temp.length() >= 4) {
+                string_temp = string_temp.substring(0,2) + "." + string_temp.substring(2);
+            }
+            intent.putExtra(TEMPERATURE_DATA, string_temp);
         } else if (UUID_HUMIDITY_MEASUREMENT.equals(characteristic.getUuid())){
             final byte[] data = characteristic.getValue();
             humidity = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
             isHumidSet = 1;
-            intent.putExtra(HUMIDITY_DATA, String.valueOf(humidity));
+            string_humid = String.valueOf(humidity);
+            if( string_humid.length() >= 4) {
+                string_humid = string_humid.substring(0,2) + "." + string_humid.substring(2);
+            }
+            intent.putExtra(HUMIDITY_DATA, string_humid);
             //intent.putExtra(HUMIDITY_DATA, String.valueOf(humidity));
-        }else if(UUID_EXTRA_MEASUREMENT.equals(characteristic.getUuid())){
+        }else if(UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())){
             final byte[] data = characteristic.getValue();
-            Log.w("extra", data.toString());
-            int humidity = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
-            intent.putExtra(EXTRA_DATA, String.valueOf(humidity));
-        }else {
+            int heartRate = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            string_heartRate = String.valueOf(heartRate);
+            isHeartSet = 1;
+            Log.w("heartRate", String.valueOf(heartRate));
+            intent.putExtra(HEART_RATE_DATA, String.valueOf(heartRate));
+        }else if(UUID_SOUND_MEASUREMENT.equals(characteristic.getUuid())){
+            final byte[] data = characteristic.getValue();
+            int sound = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            string_sound = String.valueOf(sound);
+            Log.w("sound",String.valueOf(sound));
+            isSoundSet = 1;
+            intent.putExtra(SOUND_DATA, String.valueOf(sound));
+        }else if(UUID_FALLING_CHAR.equals(characteristic.getUuid())){
+            final byte[] data = characteristic.getValue();
+            int falling = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            if(falling == 1){
+                postEvent postEvent = new postEvent(token, "T");
+                postEvent.execute(API.postEvent);
+            }
+            string_falling = String.valueOf(falling);
+            Log.w("falling", String.valueOf(falling));
+//            intent.putExtra(EXTRA_DATA, String.valueOf(falling));
+        }else if(UUID_SWITCH_CHAR.equals(characteristic.getUuid())){
+            final byte[] data = characteristic.getValue();
+            int switchOn = byteToInt(data, ByteOrder.LITTLE_ENDIAN);
+            string_switchOn = String.valueOf(switchOn);
+            Log.w("switchOn", String.valueOf(switchOn));
+//            intent.putExtra(EXTRA_DATA, String.valueOf(switchOn));
+        }
+        else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
+                Log.w("another data ",data.toString());
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
                 for(byte byteChar : data)
                     stringBuilder.append(String.format("%02X ", byteChar));
@@ -196,10 +265,22 @@ public class BluetoothLeService extends Service {
             }
         }
 
-        if(isHumidSet == 1 && isTempSet == 1){
+
+
+        if(isHumidSet == 1 && isTempSet == 1 && isHeartSet == 1 && isSoundSet == 1){
             //send Data to SErver
+            Log.w("length", string_temp.length() + " " +  string_humid.length() );
+            if(string_temp.length() >= 4 && string_humid.length() >= 4) {
+
+                SensorData sensorData = new SensorData(string_temp, string_humid, string_heartRate, "2000", string_sound);
+                postSensorData postSensorData = new postSensorData(token, sensorData);
+                postSensorData.execute(API.postSensor);
+                Log.w("sensor data", string_temp + " ::: " + string_humid);
+            }
             isHumidSet = -1;
             isTempSet = -1;
+            isHeartSet = -1;
+            isSoundSet = -1;
         }
         sendBroadcast(intent);
     }
@@ -230,22 +311,20 @@ public class BluetoothLeService extends Service {
     public boolean initialize() {
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
-//        if (mBluetoothManager == null) {
-//            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-//            if (mBluetoothManager == null) {
-//                Log.e(TAG, "Unable to initialize BluetoothManager.");
-//                return false;
-//            }
-//        }
-//        mBluetoothAdapter = mBluetoothManager.getAdapter();
-//        if (mBluetoothAdapter == null) {
-//            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
-//            return false;
-//        }else{
-//            Log.w(TAG, "initialized successfully");
-//        }
-
-        Log.w(TAG, "initializing!");
+        if (mBluetoothManager == null) {
+            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            if (mBluetoothManager == null) {
+                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                return false;
+            }
+        }
+        mBluetoothAdapter = mBluetoothManager.getAdapter();
+        if (mBluetoothAdapter == null) {
+            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
+            return false;
+        }else{
+            Log.w(TAG, "initialized successfully");
+        }
         return true;
     }
     /**
@@ -352,11 +431,31 @@ public class BluetoothLeService extends Service {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
         }else if(UUID_HUMIDITY_MEASUREMENT.equals(characteristic.getUuid())){
+            Log.w(TAG, "HUMID DESCRIPTOR");
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
-        }else if(UUID_EXTRA_MEASUREMENT.equals(characteristic.getUuid())){
+        }else if(UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())){
+            Log.w(TAG, "HEART_RATE DESCRIPTOR");
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }else if(UUID_SOUND_MEASUREMENT.equals(characteristic.getUuid())){
+            Log.w(TAG, "UUID_SOUND_MEASUREMENT DESCRIPTOR");
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }else if(UUID_FALLING_CHAR.equals(characteristic.getUuid())){
+            Log.w(TAG, "UUID_FALLING_CHAR DESCRIPTOR");
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }else if(UUID_SWITCH_CHAR.equals(characteristic.getUuid())){
+            Log.w(TAG, "UUID_SWITCH_CHAR DESCRIPTOR");
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);

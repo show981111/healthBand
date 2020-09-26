@@ -1,7 +1,6 @@
 package com.hanium.healthband;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -41,6 +40,7 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.hanium.healthband.Api.API;
 import com.hanium.healthband.model.User;
 import com.hanium.healthband.postData.postGuardian;
 import com.hanium.healthband.recyclerView.guardiansListAdapter;
@@ -54,6 +54,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import static com.hanium.healthband.LoginActivity.token;
+
 
 
 /**
@@ -70,6 +72,10 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
     private TextView mDataField;
     private TextView tv_temperature;
     private TextView tv_humidity;
+    private TextView tv_heartRate;
+    private TextView tv_sound;
+
+
     private String mDeviceName;
     private String mDeviceAddress;
     private ExpandableListView mGattServicesList;
@@ -157,15 +163,7 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            String temperature;
-            String humidity;
-            String heartRate;
-            String steps;
-            String sound;
 
-            int tempSet = 0;
-            int humidSet = 0;
-            int count = 0;
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState("connected");
@@ -179,32 +177,19 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
                 // Show all the supported services and characteristics on the user interface.
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                //String data_value = intent.getIntExtra(BluetoothLeService.EXTRA_DATA, -1);
-                Log.w("loop", "value temperature" + intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA));
-                Log.w("loop", "value humidity" + intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA));
-                Log.w("loop", "value Extra" + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                //set value in here
+
                 if(intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA) != null ){
-                    humidity = intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA);
                     tv_humidity.setText(intent.getStringExtra(BluetoothLeService.HUMIDITY_DATA));
-                    tempSet = 1;
                 }
                 if(intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA) != null){
-                    temperature = intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA);
                     tv_temperature.setText(intent.getStringExtra(BluetoothLeService.TEMPERATURE_DATA));
-                    humidSet = 1;
                 }
-
-                if(tempSet == 1 && humidSet == 1){
-                    count++;
-                    if(count % 2 == 0){
-                        //Send Data to server
-                        count = 0;
-                    }
-                    tempSet = 0;
-                    humidSet = 0;
+                if(intent.getStringExtra(BluetoothLeService.HEART_RATE_DATA) != null){
+                    tv_heartRate.setText(intent.getStringExtra(BluetoothLeService.HEART_RATE_DATA));
                 }
-
+                if(intent.getStringExtra(BluetoothLeService.SOUND_DATA) != null){
+                    tv_sound.setText(intent.getStringExtra(BluetoothLeService.SOUND_DATA));
+                }
 
 
             }
@@ -263,7 +248,6 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
     guardiansListAdapter guardiansListAdapter;
     private User user;
     private TextView tv_userName;
-    private String token;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -276,15 +260,9 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
             mDeviceAddress = intent.getStringExtra("DEVICE_ADDRESS");
             linkedUserArrayList = intent.getParcelableArrayListExtra("LinkedUserList");
             user = intent.getParcelableExtra("userData");
-            token = intent.getStringExtra("token");
-            user = new User("test","test","test", "W");
 
             tv_userName = findViewById(R.id.tv_userName);
             tv_userName.setText(user.getName());
-            linkedUserArrayList = new ArrayList<>();
-            linkedUserArrayList.add(new User("p1","보호자1","010-3232-2323", "P"));
-            linkedUserArrayList.add(new User("p2","보호자2","010-1232-1232", "P"));
-            linkedUserArrayList.add(new User("p3","보호자3","010-1332-1333", "P"));
 
 
             guardiansRecyclerView = findViewById(R.id.rv_guardian);
@@ -360,6 +338,9 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
         mDataField = (TextView) findViewById(R.id.data_value);
         tv_temperature = findViewById(R.id.tv_temperature);
         tv_humidity = findViewById(R.id.tv_humidity);
+        tv_heartRate = findViewById(R.id.tv_heartRate);
+        tv_sound = findViewById(R.id.tv_hearing);
+
 
         getSupportActionBar().setTitle(mDeviceName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -387,9 +368,8 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String editTextInput = input.getText().toString();
-                                String token = " ";
                                 postGuardian postGuardian = new postGuardian(DeviceControlActivity.this,user.getUsername(),editTextInput, linkedUserArrayList, guardiansListAdapter,token);
-                                postGuardian.execute("API");
+                                postGuardian.execute(API.postLink);
                                 Log.d("onclick","editext value is: "+ editTextInput);
                             }
                         })
@@ -444,6 +424,7 @@ public class DeviceControlActivity extends AppCompatActivity implements SharedPr
                 mBluetoothLeService.connect(mDeviceAddress);
                 return true;
             case R.id.menu_disconnect:
+                unbindService(mServiceConnection);
                 mBluetoothLeService.close();
                 mBluetoothLeService.disconnect();
                 mService.removeLocationUpdate();

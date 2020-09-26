@@ -29,11 +29,18 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.hanium.healthband.Api.API;
 import com.hanium.healthband.model.User;
+import com.hanium.healthband.postData.postLocation;
 
 import org.greenrobot.eventbus.EventBus;
+import static com.hanium.healthband.LoginActivity.token;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MyBackGroundService extends Service {
 
@@ -57,6 +64,12 @@ public class MyBackGroundService extends Service {
     private User user;
     private ArrayList<User> linkedUserArrayList = new ArrayList<>();
 
+    private Location tempLocation;
+    private double accumulMeter = 0;
+    private SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD");
+    private Date createdTime;
+    private Date updatedTime;
+
 
     public MyBackGroundService(){
 
@@ -64,6 +77,8 @@ public class MyBackGroundService extends Service {
 
     @Override
     public void onCreate() {
+        createdTime = Calendar.getInstance().getTime();
+        Log.w("RIGHT", "cur date "+createdTime.toString());
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback(){
             @Override
@@ -149,9 +164,23 @@ public class MyBackGroundService extends Service {
     }
 
     private void onNewLocation(Location lastLocation) {
+        tempLocation = mLocation;
         mLocation = lastLocation;
+        double movedMeter = measure(tempLocation.getAltitude(), tempLocation.getLongitude(),
+                                mLocation.getAltitude(), mLocation.getLongitude());
+        //2초 간격
+        if(movedMeter < 10) {
+            accumulMeter += movedMeter;
+            Log.w("movedMeter", String.valueOf(movedMeter));
+            Log.w("accumulMeter", String.valueOf(accumulMeter));
+        }
+        //updatedTime = Calendar.getInstance();
+        Log.w("RIGHT", "cur "+updatedTime.toString());
+
         EventBus.getDefault().postSticky(new SendLocationToActivity(mLocation));
         Log.w("GET UPDATE LOCATION",mLocation.getLatitude() + " " + mLocation.getLongitude() );
+        postLocation postLocation = new postLocation(token, String.valueOf(mLocation.getLatitude()), String.valueOf(mLocation.getLongitude()));
+        postLocation.execute(API.postLocation);
         mySocket.sendLocationToServer(mLocation.getLatitude() + " " + mLocation.getLongitude(),
                                     mLocation.getLatitude(), mLocation.getLongitude());
 
@@ -159,6 +188,18 @@ public class MyBackGroundService extends Service {
 //        if(serviceIsRunningInForeGround(this)){
 //            mNotificationManager.notify(NOTI_ID, getNotification());
 //        }
+    }
+
+    private double measure(double lat1,double lon1,double lat2,double lon2){  // generally used geo measurement function
+        double R = 6378.137; // Radius of earth in KM
+        double dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
+        double dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        double d = R * c;
+        return d * 1000; // meters
     }
 
     private Notification getNotification() {

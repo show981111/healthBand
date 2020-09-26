@@ -16,6 +16,8 @@ import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.google.android.gms.common.api.Api;
+import com.hanium.healthband.Api.API;
 import com.hanium.healthband.fetchData.fetchStatList;
 import com.hanium.healthband.model.Stat;
 import com.hanium.healthband.model.User;
@@ -92,8 +94,8 @@ public class EnvChartActivity extends AppCompatActivity {
 
 
 
-        fetchStatList fetchStatList = new fetchStatList("temp",chart, xAxis, token, user.getUsername());
-        fetchStatList.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/sensorData/tempHumid/");
+        fetchStatList fetchStatList = new fetchStatList("tempHumid",chart, xAxis, token, user.getUsername(), "temp");
+        fetchStatList.execute(API.GetSensor);
 
         tv_temp.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
         chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
@@ -118,8 +120,8 @@ public class EnvChartActivity extends AppCompatActivity {
             public void onClick(View v) {
                 v.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                 tv_humid.setBackgroundColor(Color.WHITE);
-                fetchStatList fetchStatList = new fetchStatList("temp",chart, xAxis, token,  user.getUsername());
-                fetchStatList.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/sensorData/tempHumid/");
+                fetchStatList fetchStatList = new fetchStatList("tempHumid",chart, xAxis, token, user.getUsername() , "temp");
+                fetchStatList.execute(API.GetSensor);
             }
         });
 
@@ -136,8 +138,8 @@ public class EnvChartActivity extends AppCompatActivity {
 //
 //                data.clearValues();
 
-                fetchStatList fetchStatList = new fetchStatList("humid",chart, xAxis, token, user.getUsername());
-                fetchStatList.execute("http://ec2-3-34-84-225.ap-northeast-2.compute.amazonaws.com:8000/sensorData/tempHumid/");
+                fetchStatList fetchStatList = new fetchStatList("tempHumid",chart, xAxis, token ,user.getUsername(), "humid");
+                fetchStatList.execute(API.GetSensor);
 
 //                data.setData(generateCandleData(CandleEntries));
 //                //chart.invalidate();
